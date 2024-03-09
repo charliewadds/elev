@@ -111,7 +111,7 @@ public class Main {
 
 
 
-    private static void moveElevator(int destFloor){
+    static void moveElevator(int destFloor){
         //todo make this add time?
         if(floor < destFloor){
             direction = direction.UP;
