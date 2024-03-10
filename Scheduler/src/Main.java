@@ -72,13 +72,15 @@ public class Main {
                     System.out.println("Floor button pressed");
                    int upOrDown = data[1];
                    int floor = data[2];
-                   int elevNum = 1;//todo get closest elevator
+                   int elevNum = findClosestElev(floor);
 
                     if((int) elevators.get(elevNum-1).get("floor") != floor){//if the elevator is not already on the floor
                         System.out.println("Elevator is not on the floor");
-                        command[0] = 0b00000001;//send arrived at floor to floor
-                        floorPacket.setPort(21-floor);
-                        floorPacket.setData(command);
+                        Thread.sleep(1000);
+                        command[0] = 0b00000000;//send move to floor
+                        command[1] = (byte) floor;
+                        elevPacket.setPort(21+elevNum);
+                        elevPacket.setData(command);
                         socket.send(floorPacket);
                         break;
                     }
@@ -131,6 +133,20 @@ public class Main {
 
         }
 
+    }
+
+
+    private static int findClosestElev(int floor){
+        int closestElev = 1;
+        int minDist = 100;
+        for(int i = 1; i < elevators.size(); i++){
+            int dist = Math.abs((int) elevators.get(i).get("floor") - floor);
+            if(dist < minDist){
+                minDist = dist;
+                closestElev = i;
+            }
+        }
+        return closestElev;
     }
 
 
