@@ -58,7 +58,7 @@ public class Main {
             System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2] );
             switch (data[0]){
                 case 0b00000000://go to floor
-                    System.out.println("go to floor");
+                    //System.out.println("go to floor");
                     int newFloor = data[1];
                     //System.out.println("Received: " + new String(data, 0, packet.getLength()));
                     System.out.println("go to floor");
