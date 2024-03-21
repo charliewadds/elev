@@ -9,7 +9,7 @@ public class MainTest {
     @Test
     void testMain_NoExceptionThrown() {
 //        try {
-//            Main.main(null);
+//            Floor.main(null);
 //        } catch (UnknownHostException e) {
 //            fail("An exception occurred: " + e.getMessage());
 //        }
@@ -22,7 +22,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Floor.main(null);
         });
 
         System.setIn(System.in);
@@ -35,7 +35,7 @@ public class MainTest {
         System.setIn(in);
 
         assertThrows(NumberFormatException.class, () -> {
-            Main.main(null);
+            Floor.main(null);
         });
 
         System.setIn(System.in);
@@ -48,7 +48,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Floor.main(null);
         });
 
         System.setIn(System.in);
@@ -61,7 +61,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Floor.main(null);
         });
 
         System.setIn(System.in);
@@ -74,7 +74,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Floor.main(null);
         });
 
         System.setIn(System.in);
@@ -87,7 +87,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Floor.main(null);
         });
 
         System.setIn(System.in);

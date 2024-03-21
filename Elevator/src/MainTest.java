@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,7 +12,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Elevator.main(null);
         });
 
         System.setIn(System.in);
@@ -25,7 +25,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Elevator.main(null);
         });
 
         System.setIn(System.in);
@@ -38,7 +38,7 @@ public class MainTest {
         System.setIn(in);
 
         assertThrows(NumberFormatException.class, () -> {
-            Main.main(null);
+            Elevator.main(null);
         });
 
         System.setIn(System.in);
@@ -51,7 +51,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Elevator.main(null);
         });
 
         System.setIn(System.in);
@@ -64,7 +64,7 @@ public class MainTest {
         System.setIn(in);
 
         assertThrows(RuntimeException.class, () -> {
-            Main.main(null);
+            Elevator.main(null);
         });
 
         System.setIn(System.in);
@@ -72,19 +72,19 @@ public class MainTest {
 
     @Test
     void testMain_MoveElevator() {
-        assertEquals(Main.direction.NONE, Main.direction);
-        Main.moveElevator(2);
-        assertEquals(Main.direction.UP, Main.direction);
-        assertEquals(2, Main.floor);
+        assertEquals(Elevator.direction.NONE, Elevator.direction);
+        Elevator.moveElevator(2);
+        assertEquals(Elevator.direction.UP, Elevator.direction);
+        assertEquals(2, Elevator.floor);
     }
 
     @Test
     void testMain_MoveElevatorSameFloor() {
-        Main.floor = 3;
-        Main.direction = Main.direction.UP;
-        Main.moveElevator(3);
-        assertEquals(Main.direction.NONE, Main.direction);
-        assertEquals(3, Main.floor);
+        Elevator.floor = 3;
+        Elevator.direction = Elevator.direction.UP;
+        Elevator.moveElevator(3);
+        assertEquals(Elevator.direction.NONE, Elevator.direction);
+        assertEquals(3, Elevator.floor);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class MainTest {
         System.setIn(in);
 
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Elevator.main(null);
         });
 
         System.setIn(System.in);
@@ -102,10 +102,10 @@ public class MainTest {
 
     @Test
     void testMain_SameFloorNoMovement() {
-        Main.floor = 4;
-        Main.moveElevator(4);
-        assertEquals(Main.direction.NONE, Main.direction);
-        assertEquals(4, Main.floor);
+        Elevator.floor = 4;
+        Elevator.moveElevator(4);
+        assertEquals(Elevator.direction.NONE, Elevator.direction);
+        assertEquals(4, Elevator.floor);
     }
 
     // Add more tests to cover additional scenarios and edge cases...

@@ -2,11 +2,9 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
+public class Scheduler {
 
 
-
-
-public class Main {
     static List<Map<String, Object>> elevators = new ArrayList<Map<String, Object>>();
     static List<Map<String, Object>> floors = new ArrayList<Map<String, Object>>();
 
@@ -70,9 +68,9 @@ public class Main {
             switch (data[0]){
                 case 0b00000000://floor button pressed
                     System.out.println("Floor button pressed");
-                   int upOrDown = data[1];
-                   int floor = data[2];
-                   int elevNum = findClosestElev(floor);
+                    int upOrDown = data[1];
+                    int floor = data[2];
+                    int elevNum = findClosestElev(floor);
 
                     if((int) elevators.get(elevNum-1).get("floor") != floor){//if the elevator is not already on the floor
                         System.out.println("Elevator is not on the floor");

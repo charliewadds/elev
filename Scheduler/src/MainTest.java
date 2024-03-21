@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,7 @@ public class MainTest {
     @Test
     void testMain_NoExceptionThrown() {
 //        try {
-//            //Main.main(null);
+//            //Scheduler.main(null);
 //        } catch (IOException e) {
 //            fail("An exception occurred: " + e.getMessage());
 //        }
@@ -26,7 +26,7 @@ public class MainTest {
 
         // Ensure no exceptions are thrown
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Scheduler.main(null);
         });
 
         // Reset System.in
@@ -43,7 +43,7 @@ public class MainTest {
 
         // Ensure an IOException is thrown
         assertThrows(IOException.class, () -> {
-            Main.main(null);
+            Scheduler.main(null);
         });
 
         // Reset System.in
@@ -60,7 +60,7 @@ public class MainTest {
 
         // Ensure that the elevator state changes to ARRIVED when a floor is reached
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Scheduler.main(null);
         });
 
         // Reset System.in
@@ -77,7 +77,7 @@ public class MainTest {
 
         // Ensure that the elevator receives the correct command when a floor button is pressed
         assertDoesNotThrow(() -> {
-            Main.main(null);
+            Scheduler.main(null);
         });
 
         // Reset System.in

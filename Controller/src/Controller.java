@@ -1,7 +1,8 @@
+
 import java.net.*;
 import java.util.Scanner;
 
-public class Main {
+public class Controller {
     static DatagramSocket socket;
     public static void main(String[] args) throws UnknownHostException {
         InetAddress serverAddress = InetAddress.getByName("127.0.0.1");

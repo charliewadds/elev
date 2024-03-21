@@ -10,7 +10,7 @@ enum direction{
 }
 
 
-public class Main {
+public class Elevator {
     static doorState doorState;
     static direction direction;
     static int floor;
@@ -62,32 +62,35 @@ public class Main {
                     int newFloor = data[1];
                     //System.out.println("Received: " + new String(data, 0, packet.getLength()));
                     System.out.println("go to floor");
-                    moveElevator(newFloor);
-                    doorState = doorState.OPEN;//todo make this in scheduler
-                    command = new byte[3];
-                    command[0] = 0b00000001;//send arrived at floor
-                    command[1] = (byte) floor;
-                    command[2] = (byte) elevNum;
-                    packet.setData(command);
-                    socket.send(packet);
-                    floor = newFloor;
-
+                    if(isDoorClosed()){
+                        System.out.println("Door closed");
+                        moveElevator(newFloor);
+                        doorState = doorState.OPEN;//todo make this in scheduler
+                        command = new byte[3];
+                        command[0] = 0b00000001;//send arrived at floor
+                        command[1] = (byte) floor;
+                        command[2] = (byte) elevNum;
+                        packet.setData(command);
+                        socket.send(packet);
+                        floor = newFloor;
+                    }
+                    System.out.println("Door Fault");
                     break;
 
-            case 0b00000001://open door
-                System.out.println("open door");
-                if(data[1] == 0b00000000) {//open door
-                    System.out.println("Received: " + new String(data, 0, packet.getLength()));
+                case 0b00000001://open door
                     System.out.println("open door");
-                    doorState = doorState.OPEN;
-                }else {//close door
-                    System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                    System.out.println("close door");
-                    doorState = doorState.CLOSED;
-                }
+                    if(data[1] == 0b00000000) {//open door
+                        System.out.println("Received: " + new String(data, 0, packet.getLength()));
+                        System.out.println("open door");
+                        doorState = doorState.OPEN;
+                    }else {//close door
+                        System.out.println("Received: " + new String(data, 0, packet.getLength()));
+                        System.out.println("close door");
+                        doorState = doorState.CLOSED;
+                    }
 
 
-                break;
+                    break;
 
                 case 0b00000010://elevator button pressed
 
@@ -122,5 +125,13 @@ public class Main {
         }
         floor = destFloor;
 
+    }
+
+    public static boolean isDoorClosed(){
+        return doorState == doorState.CLOSED;
+    }
+
+    public static doorState getDoorState(){
+        return doorState;
     }
 }
