@@ -41,8 +41,11 @@ public class Floor implements Runnable{
         System.out.println("Floor port: " + floorNum);
 
 
-        System.out.println("enter the ip of the scheduler (if local enter 127.0.0.1)");
+        System.out.println("enter the ip of the scheduler (if local press enter)");
         String ip = scanner.nextLine();
+        if(ip.isEmpty()) {
+            ip = "127.0.0.1";
+        }
         InetAddress serverAddress = InetAddress.getByName(ip);
 
         System.out.println("enter the port of the scheduler (default 21)");
@@ -72,16 +75,19 @@ public class Floor implements Runnable{
         socket.send(packet);
 
         socket.receive(packet);
-        System.out.println("Received: " +(int) packet.getData()[0]);
+        System.out.println("Received: " + (int) packet.getData()[0]);
         floorNum = packet.getData()[0];
-
+        byte[] data = new byte[4];
+        for(int i = 0; i < 4; i++){
+            data[i] = 0;
+        }
         while(true) {
 
-            System.out.println("Waiting for data");
+            System.out.println("(floor " + floorNum + ") Waiting for data");
             socket.receive(packet);
-            System.out.println("Received data");
+            System.out.println("(floor  " + floorNum + ") Received data");
 
-            byte[] data = packet.getData();
+            data = packet.getData();
 
             System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2]);
             switch (data[0]){

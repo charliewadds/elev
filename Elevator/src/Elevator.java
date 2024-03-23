@@ -43,12 +43,14 @@ public class Elevator implements Runnable{
         Scanner scanner = new Scanner(System.in);
         recvPort = scanner.nextInt();
         scanner.nextLine();
-        System.out.println("Elevator port: " + elevNum);
+        System.out.println("Elevator port: " + recvPort);
 
 
-        System.out.println("enter the ip of the scheduler (if local enter 127.0.0.1)");
+        System.out.println("enter the ip of the scheduler (if local press enter)");
         String ip = scanner.nextLine();
-
+        if(ip.isEmpty()) {
+            ip = "127.0.0.1";
+        }
 
         InetAddress serverAddress = InetAddress.getByName(ip);
 
@@ -119,11 +121,19 @@ public class Elevator implements Runnable{
                     System.out.println("open door");
                     if(data[1] == 0b00000000) {//open door
                         System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                        System.out.println("open door");
+                        System.out.println("opening door");
+                        Thread.sleep(5000);
+                        System.out.println("door opened");
+                        packet.setData(new byte[]{0b00000001, (byte) elevNum});
+                        socket.send(packet);
                         doorState = doorState.OPEN;
                     }else {//close door
                         System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                        System.out.println("close door");
+                        System.out.println("closing door");
+                        Thread.sleep(5000);
+                        packet.setData(new byte[]{0b00000000, (byte) elevNum});
+                        socket.send(packet);
+                        System.out.println("door closed");
                         doorState = doorState.CLOSED;
                     }
 

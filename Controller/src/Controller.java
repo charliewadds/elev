@@ -13,8 +13,8 @@ public class Controller {
 
         InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
         int len = 32;
-        DatagramPacket floorPacket = new DatagramPacket(new byte[len], len,serverAddress, 20);
-        DatagramPacket elevPacket = new DatagramPacket(new byte[len], len,serverAddress, 22);
+        DatagramPacket floorPacket = new DatagramPacket(new byte[len], len,serverAddress, 12);
+        DatagramPacket elevPacket = new DatagramPacket(new byte[len], len,serverAddress, 11);
         Scanner scanner = new Scanner(System.in);
 
         try {
@@ -34,15 +34,21 @@ public class Controller {
             System.out.println("2. Elevator Packet");
             System.out.println("3. Exit");
             int choice = scanner.nextInt();
+            int port;
             //scanner.nextLine();
             switch(choice){
                 case 1:
                     System.out.println("Enter the floor number: ");
                     int floor = scanner.nextInt();
-                    System.out.println("Enter the direction: ");
                     scanner.nextLine();
+                    System.out.println("Enter the direction: ");
                     String direction = scanner.nextLine();
-                    pushFloorButton(floor, direction, floorPacket);
+
+                    System.out.println("Enter the port: ");
+                    port = scanner.nextInt();
+                    scanner.nextLine();
+
+                    pushFloorButton(floor, direction, floorPacket, port);
                     break;
                 case 2:
 
@@ -52,7 +58,12 @@ public class Controller {
                     System.out.println("Enter the floor number: ");
                     int floorNum = scanner.nextInt();
                     scanner.nextLine();
-                    sendElevatorButton(elevator, floorNum, elevPacket);
+
+                    System.out.println("Enter the port: ");
+                    port = scanner.nextInt();
+                    scanner.nextLine();
+
+                    sendElevatorButton(elevator, floorNum, elevPacket, port);
                     break;
                 case 3:
                     System.exit(0);
@@ -66,7 +77,7 @@ public class Controller {
     }
 
 
-    private static void pushFloorButton(int floor, String direction, DatagramPacket packet){
+    private static void pushFloorButton(int floor, String direction, DatagramPacket packet, int port){
         //send a message to the scheduler
         byte[] command = new byte[4];
         command[0] = 0b00000001;
@@ -76,23 +87,24 @@ public class Controller {
         }else if(direction.equals("DOWN")){
             command[1] = 0b00000001;
         }
-        packet.setPort(21- floor);
+        packet.setPort(port);
         packet.setData(command);
         try {
+
             socket.send(packet);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
     }
-    private static void sendElevatorButton(int elevator, int floor, DatagramPacket packet){
+    private static void sendElevatorButton(int elevator, int floor, DatagramPacket packet, int port){
         //send a message to the elevator
         byte[] command = new byte[4];
         command[0] = 0b00000010;
         command[1] = (byte) floor;
         command[2] = 0b00000000;
         command[3] = 0b00000000;
-        packet.setPort(21+elevator);
+        packet.setPort(port);
         packet.setData(command);
         try {
             socket.send(packet);
