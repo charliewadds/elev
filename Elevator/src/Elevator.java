@@ -10,7 +10,7 @@ enum direction{
 }
 
 
-public class Elevator {
+public class Elevator implements Runnable{
     static doorState doorState;
     static direction direction;
     static int floor;
@@ -18,40 +18,75 @@ public class Elevator {
     static DatagramSocket socket;
 
     static int port = 20;
+    @Override
+    public void run() {
 
-    public static void main(String[] args) throws IOException {
+        try {
+            main(null);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void main(String[] args) throws IOException, InterruptedException {
+        System.out.println("Elevator is running");
         doorState = doorState.CLOSED;
         direction = direction.NONE;
         floor = 1;
+        int recvPort;
 
-        System.out.println("Creating new Elevator");
-        System.out.println("Enter the elevator number: ");
+//        System.out.println("Creating new Elevator");
+//        System.out.println("Enter the elevator number: ");
+//        Scanner scanner = new Scanner(System.in);
+//        elevNum = scanner.nextInt();
+        Thread.sleep(1000);
+        System.out.println("(unknown Elevator) enter port number");
         Scanner scanner = new Scanner(System.in);
-        elevNum = scanner.nextInt();
+        recvPort = scanner.nextInt();
+        scanner.nextLine();
+        System.out.println("Elevator port: " + elevNum);
 
 
-        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+        System.out.println("enter the ip of the scheduler (if local enter 127.0.0.1)");
+        String ip = scanner.nextLine();
 
 
-        int recvPort = 21+elevNum;
+        InetAddress serverAddress = InetAddress.getByName(ip);
 
-        //System.out.println("Enter the destination port: ");
-        int destPort = 21;
+
+
+
+        System.out.println("enter the port of the scheduler (default 21)");
+        int destPort = scanner.nextInt();
+        scanner.nextLine();
 
 
         int len = 32;
         DatagramPacket packet = new DatagramPacket(new byte[len], len,serverAddress, destPort);
         byte[] command = new byte[3];
-        try {
-            socket = new DatagramSocket(recvPort);
-        } catch (SocketException e) {
-            System.out.println(e);
-            throw new RuntimeException(e);
+        while(true) {
+            try {
+                socket = new DatagramSocket(recvPort);
+                break;
+            } catch (SocketException e) {
+                System.out.println("port number: " + recvPort + " is already in use");
+                System.out.println(e);
+                //throw new RuntimeException(e);
+            }
+            System.out.println("Try a different port number");
         }
+        //
+        packet.setData(new byte[]{(byte) recvPort});
+        packet.setAddress(serverAddress);
+        packet.setPort(destPort);
+        socket.send(packet);
+
+        socket.receive(packet);
+        System.out.println("Received: " +(int) packet.getData()[0]);
+        elevNum = packet.getData()[0];
 
         while(true){
 
-            System.out.println("Elevator " + elevNum + " is waiting for a command.");
+            System.out.println("(Elevator " + elevNum + ")  waiting for a command.");
             socket.receive(packet);
             byte[] data = packet.getData();
 
@@ -71,6 +106,9 @@ public class Elevator {
                         command[1] = (byte) floor;
                         command[2] = (byte) elevNum;
                         packet.setData(command);
+                        packet.setAddress(serverAddress);
+                        packet.setPort(destPort);
+
                         socket.send(packet);
                         floor = newFloor;
                     }
@@ -100,8 +138,8 @@ public class Elevator {
                     command[0] = 0b00000010;
                     command[1] = data[1];
                     command[2] = (byte) elevNum;
-
-                    packet.setPort(21);
+                    packet.setAddress(serverAddress);
+                    packet.setPort(destPort);
                     packet.setData(command);
                     socket.send(packet);
                     break;

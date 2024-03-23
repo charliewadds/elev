@@ -33,5 +33,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="Elevator" />
+    <orderEntry type="module" module-name="Floor" />
+    <orderEntry type="module" module-name="Scheduler" />
   </component>
 </module>

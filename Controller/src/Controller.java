@@ -1,10 +1,16 @@
 
+import java.io.IOException;
 import java.net.*;
 import java.util.Scanner;
 
 public class Controller {
     static DatagramSocket socket;
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws IOException {
+
+
+
+
+
         InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
         int len = 32;
         DatagramPacket floorPacket = new DatagramPacket(new byte[len], len,serverAddress, 20);
@@ -17,6 +23,10 @@ public class Controller {
             System.out.println(e);
             throw new RuntimeException(e);
         }
+
+//        Scheduler scheduler = new Scheduler();
+//        Thread schedulerThread = new Thread(scheduler);
+//        schedulerThread.start();
 
         while(true){
             System.out.println("Enter the type of packet you want to send: ");
