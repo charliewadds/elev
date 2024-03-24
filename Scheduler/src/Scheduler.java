@@ -1,7 +1,9 @@
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.*;
-
 public class Scheduler implements Runnable{
 
     static final double MOVE_MAX_TIME = 10000;//10 secon ds
@@ -30,6 +32,7 @@ public class Scheduler implements Runnable{
         int len = 32;
         DatagramPacket floorPacket = new DatagramPacket(new byte[len], len,serverAddress, 20);
         DatagramPacket elevPacket = new DatagramPacket(new byte[len], len,serverAddress, 22);
+        DatagramPacket setupPacket = new DatagramPacket(new byte[len], len,serverAddress, 22);
 
         try {
             socket = new DatagramSocket(21);
@@ -76,24 +79,23 @@ public class Scheduler implements Runnable{
 
                 Elevator newElevator = new Elevator();
                 Thread elevatorThread = new Thread(newElevator);
-                elevatorThread.setDaemon(true);
                 elevatorThread.start();
 
             }
 
             System.out.println("Waiting for response from elevator " + (i + 1) + "...");
-            socket.receive(elevPacket);
+            socket.receive(setupPacket);
             System.out.println("Response received from elevator " + (i + 1) + "...");
-            ElevatorPort[i] = (int) elevPacket.getData()[0];
+            ElevatorPort[i] = (int) setupPacket.getData()[0];
 
             if(remote.equals("l")){
-                floorPacket.setData(new byte[]{(byte) (i+1)});
-                floorPacket.setAddress(InetAddress.getByName(ElevatorIp[i]));
-                floorPacket.setPort(ElevatorPort[i]);
-                socket.send(floorPacket);
+                setupPacket.setData(new byte[]{(byte) (i+1)});
+                setupPacket.setAddress(InetAddress.getByName(ElevatorIp[i]));
+                setupPacket.setPort(ElevatorPort[i]);
+                socket.send(setupPacket);
 
             }
-            if(elevPacket.getAddress().getHostAddress().equals(ElevatorIp[i])){
+            if(setupPacket.getAddress().getHostAddress().equals(ElevatorIp[i])){
                 System.out.println("Elevator " + (i+1) + " is ready, the port is: " + ElevatorPort[i]);
             }else{
                 System.out.println("Elevator " + (i +1)+ " is not ready");
@@ -123,18 +125,18 @@ public class Scheduler implements Runnable{
             }
 
             System.out.println("Waiting for response from floor " + i + "...");
-            socket.receive(elevPacket);
+            socket.receive(setupPacket);
             System.out.println("Response received from floor " + i + "...");
-            FloorPort[i] = (int) elevPacket.getData()[0];
+            FloorPort[i] = (int) setupPacket.getData()[0];
 
             if(remote.equals("l")){
-                floorPacket.setData(new byte[]{(byte) (i+1)});
-                floorPacket.setAddress(InetAddress.getByName(FloorIp[i]));
-                floorPacket.setPort(FloorPort[i]);
-                socket.send(floorPacket);
+                setupPacket.setData(new byte[]{(byte) (i+1)});
+                setupPacket.setAddress(InetAddress.getByName(FloorIp[i]));
+                setupPacket.setPort(FloorPort[i]);
+                socket.send(setupPacket);
 
             }
-            if(elevPacket.getAddress().getHostAddress().equals(FloorIp[i])){
+            if(setupPacket.getAddress().getHostAddress().equals(FloorIp[i])){
                 System.out.println("Floor " + (i+1) + " is ready, the port is: " + FloorPort[i]);
             }else{
                 System.out.println("Floor " + (i +1)+ " is not ready");
@@ -190,18 +192,20 @@ public class Scheduler implements Runnable{
                         Thread.sleep(1000);
                         command[0] = 0b00000000;//send move to floor
                         command[1] = (byte) floor;
-                        elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elevNum]));
-                        elevPacket.setPort(ElevatorPort[elevNum]);
+                        command[2] = (byte) elevNum;
+                        elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elevNum-1]));
+                        elevPacket.setPort(ElevatorPort[elevNum-1]);
                         elevPacket.setData(command);
                         socket.send(floorPacket);
-                        moveTimers[elevNum] = System.currentTimeMillis();//set the move timer for the elevator
+                        moveTimers[elevNum-1] = System.currentTimeMillis();//set the move timer for the elevator
                         break;
                     }
 
                     command[0] = 0b00000001;//open doors
                     command[1] = 0b00000000;
-                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elevNum]));
-                    elevPacket.setPort(ElevatorPort[elevNum]);
+                    command[2] = (byte) elevNum;
+                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elevNum-1]));
+                    elevPacket.setPort(ElevatorPort[elevNum-1]);
                     elevators.get(elevNum-1).put("doorState", "OPEN");//open the door
                     elevPacket.setData(command);
                     socket.send(elevPacket);
@@ -217,8 +221,9 @@ public class Scheduler implements Runnable{
 
                     command[0] = 0b00000001;//send open door
                     command[1] = 0b00000000;
+                    command[2] = (byte) data[2];
                     elevPacket.setData(command);
-                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]]));
+                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]-1]));
                     elevPacket.setPort(ElevatorPort[data[2]]);
                     System.out.println("(scheduler) sendOpenDoor");//todo implement door wait max time
                     socket.send(elevPacket);
@@ -234,7 +239,7 @@ public class Scheduler implements Runnable{
                     }
 
 
-                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]]));
+                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]-1]));
                     elevPacket.setPort(ElevatorPort[data[2]]);
                     System.out.println("(scheduler) sendCloseDoor");
                     elevators.get(data[2]-1).put("doorState", "CLOSED");//open the door
@@ -243,6 +248,9 @@ public class Scheduler implements Runnable{
 
 
                     command[0] = 0b00000000;//send arrived at floor to floor
+                    command[1] = (byte) newFloor;
+                    command[2] = (byte) data[2];
+
                     floorPacket.setAddress(InetAddress.getByName(FloorIp[newFloor]));
                     floorPacket.setPort(FloorPort[newFloor]);
                     floorPacket.setData(command);
@@ -255,7 +263,8 @@ public class Scheduler implements Runnable{
                     int elev = data[2];
                     command[0] = 0b00000000;//go to floor
                     command[1] = (byte) floorNum;
-                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elev]));
+                    command[2] = 0b00000000;
+                    elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elev-1]));
                     elevPacket.setPort(ElevatorPort[elev]);
                     elevPacket.setData(command);
                     socket.send(elevPacket);

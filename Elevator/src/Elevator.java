@@ -64,6 +64,7 @@ public class Elevator implements Runnable{
 
         int len = 32;
         DatagramPacket packet = new DatagramPacket(new byte[len], len,serverAddress, destPort);
+        DatagramPacket setupPacket = new DatagramPacket(new byte[len], len,serverAddress, destPort);
         byte[] command = new byte[3];
         while(true) {
             try {
@@ -77,14 +78,14 @@ public class Elevator implements Runnable{
             System.out.println("Try a different port number");
         }
         //
-        packet.setData(new byte[]{(byte) recvPort});
-        packet.setAddress(serverAddress);
-        packet.setPort(destPort);
-        socket.send(packet);
+        setupPacket.setData(new byte[]{(byte) recvPort});
+        setupPacket.setAddress(serverAddress);
+        setupPacket.setPort(destPort);
+        socket.send(setupPacket);
 
-        socket.receive(packet);
+        socket.receive(setupPacket);
         System.out.println("Received: " +(int) packet.getData()[0]);
-        elevNum = packet.getData()[0];
+        elevNum = setupPacket.getData()[0];
 
         while(true){
 

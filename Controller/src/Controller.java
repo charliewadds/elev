@@ -48,7 +48,7 @@ public class Controller {
                     port = scanner.nextInt();
                     scanner.nextLine();
 
-                    pushFloorButton(floor, direction, floorPacket, port);
+                    pushFloorButton(floor, direction, serverAddress, port);
                     break;
                 case 2:
 
@@ -77,25 +77,22 @@ public class Controller {
     }
 
 
-    private static void pushFloorButton(int floor, String direction, DatagramPacket packet, int port){
-        //send a message to the scheduler
-        byte[] command = new byte[4];
-        command[0] = 0b00000001;
-
-        if(direction.equals("UP")){
-            command[1] = 0b00000000;
-        }else if(direction.equals("DOWN")){
-            command[1] = 0b00000001;
-        }
-        packet.setPort(port);
-        packet.setData(command);
+    private static void pushFloorButton(int floor, String direction, InetAddress serverAddress, int port) {
         try {
+            byte[] command = new byte[4];
+            command[0] = 0b00000001;
 
+            if (direction.equals("UP")) {
+                command[1] = 0b00000000;
+            } else {
+                command[1] = 0b00000001;
+            }
+
+            DatagramPacket packet = new DatagramPacket(command, command.length, serverAddress, port);
             socket.send(packet);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            e.printStackTrace(); // Handle or log the exception appropriately
         }
-
     }
     private static void sendElevatorButton(int elevator, int floor, DatagramPacket packet, int port){
         //send a message to the elevator

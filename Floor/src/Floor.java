@@ -1,6 +1,10 @@
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.Scanner;
+
 
 enum buttonState{
     UP, DOWN, NONE
@@ -38,7 +42,7 @@ public class Floor implements Runnable{
         Scanner scanner = new Scanner(System.in);
         recvPort = scanner.nextInt();
         scanner.nextLine();
-        System.out.println("Floor port: " + floorNum);
+        System.out.println("Floor port: " + recvPort);
 
 
         System.out.println("enter the ip of the scheduler (if local press enter)");
@@ -55,7 +59,9 @@ public class Floor implements Runnable{
 
 
         int len = 32;
+
         DatagramPacket packet = new DatagramPacket(new byte[len], len, serverAddress, destPort);
+        DatagramPacket setupPacket = new DatagramPacket(new byte[len], len, serverAddress, destPort);
 
         while(true) {
             try {
@@ -69,26 +75,24 @@ public class Floor implements Runnable{
             System.out.println("Try a different port number");
         }
 
-        packet.setData(new byte[]{(byte) recvPort});
-        packet.setAddress(serverAddress);
-        packet.setPort(destPort);
-        socket.send(packet);
+        setupPacket.setData(new byte[]{(byte) recvPort});
+        setupPacket.setAddress(serverAddress);
+        setupPacket.setPort(destPort);
+        socket.send(setupPacket);
 
-        socket.receive(packet);
-        System.out.println("Received: " + (int) packet.getData()[0]);
-        floorNum = packet.getData()[0];
-        byte[] data = new byte[4];
-        for(int i = 0; i < 4; i++){
-            data[i] = 0;
-        }
+        socket.receive(setupPacket);
+        System.out.println("Received: " + (int) setupPacket.getData()[0]);
+        floorNum = setupPacket.getData()[0];
+        byte[] data;
+
         while(true) {
 
             System.out.println("(floor " + floorNum + ") Waiting for data");
             socket.receive(packet);
             System.out.println("(floor  " + floorNum + ") Received data");
 
-            data = packet.getData();
-
+            data = packet.getData().clone();
+            System.out.println("Data: " + data[0]);
             System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2]);
             switch (data[0]){
 
