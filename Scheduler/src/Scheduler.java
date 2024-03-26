@@ -6,7 +6,7 @@ import java.net.SocketException;
 import java.util.*;
 public class Scheduler implements Runnable{
 
-    static final double MOVE_MAX_TIME = 10000;//10 secon ds
+    static final double MOVE_MAX_TIME = 1;//10 secon ds
     static List<Map<String, Object>> elevators = new ArrayList<Map<String, Object>>();
     static List<Map<String, Object>> floors = new ArrayList<Map<String, Object>>();
 
@@ -226,11 +226,11 @@ public class Scheduler implements Runnable{
                     elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]-1]));
                     elevPacket.setPort(ElevatorPort[data[2]]);
                     System.out.println("(scheduler) sendOpenDoor");//todo implement door wait max time
+                    double doorTimer = System.currentTimeMillis();
                     socket.send(elevPacket);
-
                     socket.receive(elevPacket);
                     byte[] doorData = elevPacket.getData();
-                    if(doorData[0] == 0b00000001 && doorData[1] == data[2]){
+                    if(doorData[0] == 0b00000001 && doorData[1] == data[2] && (doorTimer < System.currentTimeMillis() - 5000)){
                         System.out.println("(scheduler) Door is open");
                         moveTimers[data[2]] = -1;//reset the move timer
 

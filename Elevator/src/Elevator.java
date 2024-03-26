@@ -111,7 +111,7 @@ public class Elevator implements Runnable{
                         packet.setData(command);
                         packet.setAddress(serverAddress);
                         packet.setPort(destPort);
-
+                        Thread.sleep(100);
                         socket.send(packet);
                         floor = newFloor;
                     }
