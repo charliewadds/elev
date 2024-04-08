@@ -18,6 +18,9 @@ public class NewGui extends JFrame {
     int numFloor;
     int newPort;
 
+    int elevatorPorts[];
+    String elevatorIPs[];
+
     static DatagramSocket socket;
     public NewGui(int numElev, int numFloors) throws UnknownHostException {
         super("Elevator Control System");
@@ -38,6 +41,8 @@ public class NewGui extends JFrame {
         this.elevatorInputs = new JTextField[MAX_ELEV];
         this.elevatorStatusLights = new JLabel[MAX_ELEV];
         this.elevatorSendButtons = new JButton[MAX_ELEV];
+        this.elevatorPorts = new int[MAX_ELEV];
+        this.elevatorIPs = new String[MAX_ELEV];
 
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -58,7 +63,7 @@ public class NewGui extends JFrame {
         addFloor.addActionListener(e -> {
             for (int i = 0; i < Integer.parseInt(newPortFieldFloorEnd.getText()) - Integer.parseInt(newPortFieldFloorStart.getText()); i++) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -67,6 +72,7 @@ public class NewGui extends JFrame {
                 } catch (UnknownHostException ex) {
                     throw new RuntimeException(ex);
                 }
+                System.out.println("Floor " +  i + " added\n\n\n");
             }
         });
         try {
@@ -141,6 +147,9 @@ public class NewGui extends JFrame {
         numElev++;
         addElevGUI(numElev);
     }
+
+    private void sendElevatorFloor(int elevator, int floor) {
+        InetAddress serverAddress = InetAddress.getByName("
 
     private void addFloor(int port) throws UnknownHostException {
         InetAddress serverAddress = InetAddress.getByName("127.0.0.1");

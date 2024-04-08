@@ -85,11 +85,10 @@ public class Floor implements Runnable{
         floorNum = setupPacket.getData()[0];
         System.out.println("Floor got number: " + floorNum);
 
-
         byte[] data = new byte[5];
         while(true) {
 
-            System.out.println("(floor " + floorNum + ") Waiting for data");
+            System.out.println("(floor " + floorNum + ") Waiting for data\n\n\n\n");
             socket.receive(packet);
             System.out.println("(floor  " + floorNum + ") Received data");
 
