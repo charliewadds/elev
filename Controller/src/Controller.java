@@ -6,74 +6,81 @@ import java.util.Scanner;
 public class Controller {
     static DatagramSocket socket;
     public static void main(String[] args) throws IOException {
-
-
-
-
-
-        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
-        int len = 32;
-        DatagramPacket floorPacket = new DatagramPacket(new byte[len], len,serverAddress, 12);
-        DatagramPacket elevPacket = new DatagramPacket(new byte[len], len,serverAddress, 11);
         Scanner scanner = new Scanner(System.in);
+        System.out.println("text or gui (1/0): ");
+        int type = scanner.nextInt();
+        scanner.nextLine();
 
-        try {
-            socket = new DatagramSocket(8000);
-        } catch (SocketException e) {
-            System.out.println(e);
-            throw new RuntimeException(e);
-        }
+        if(type == 0) {
+            ElevGUI elevatorGUI = new ElevGUI();
+            //gui
+            //TODO
+        }else {
+
+
+            InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+            int len = 32;
+            DatagramPacket floorPacket = new DatagramPacket(new byte[len], len, serverAddress, 12);
+            DatagramPacket elevPacket = new DatagramPacket(new byte[len], len, serverAddress, 11);
+
+
+            try {
+                socket = new DatagramSocket(8000);
+            } catch (SocketException e) {
+                System.out.println(e);
+                throw new RuntimeException(e);
+            }
 
 //        Scheduler scheduler = new Scheduler();
 //        Thread schedulerThread = new Thread(scheduler);
 //        schedulerThread.start();
 
-        while(true){
-            System.out.println("Enter the type of packet you want to send: ");
-            System.out.println("1. Floor Packet");
-            System.out.println("2. Elevator Packet");
-            System.out.println("3. Exit");
-            int choice = scanner.nextInt();
-            int port;
-            //scanner.nextLine();
-            switch(choice){
-                case 1:
-                    System.out.println("Enter the floor number: ");
-                    int floor = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.println("Enter the direction: ");
-                    String direction = scanner.nextLine();
+            while (true) {
+                System.out.println("Enter the type of packet you want to send: ");
+                System.out.println("1. Floor Packet");
+                System.out.println("2. Elevator Packet");
+                System.out.println("3. Exit");
+                int choice = scanner.nextInt();
+                int port;
+                //scanner.nextLine();
+                switch (choice) {
+                    case 1:
+                        System.out.println("Enter the floor number: ");
+                        int floor = scanner.nextInt();
+                        scanner.nextLine();
+                        System.out.println("Enter the direction: ");
+                        String direction = scanner.nextLine();
 
-                    System.out.println("Enter the port: ");
-                    port = scanner.nextInt();
-                    scanner.nextLine();
+                        System.out.println("Enter the port: ");
+                        port = scanner.nextInt();
+                        scanner.nextLine();
 
-                    pushFloorButton(floor, direction, serverAddress, port);
-                    break;
-                case 2:
+                        pushFloorButton(floor, direction, serverAddress, port);
+                        break;
+                    case 2:
 
-                    System.out.println("Enter the elevator number: ");
-                    int elevator = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.println("Enter the floor number: ");
-                    int floorNum = scanner.nextInt();
-                    scanner.nextLine();
+                        System.out.println("Enter the elevator number: ");
+                        int elevator = scanner.nextInt();
+                        scanner.nextLine();
+                        System.out.println("Enter the floor number: ");
+                        int floorNum = scanner.nextInt();
+                        scanner.nextLine();
 
-                    System.out.println("Enter the port: ");
-                    port = scanner.nextInt();
-                    scanner.nextLine();
+                        System.out.println("Enter the port: ");
+                        port = scanner.nextInt();
+                        scanner.nextLine();
 
-                    sendElevatorButton(elevator, floorNum, elevPacket, port);
-                    break;
-                case 3:
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.println("Invalid choice");
-                    break;
+                        sendElevatorButton(elevator, floorNum, elevPacket, port);
+                        break;
+                    case 3:
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Invalid choice");
+                        break;
+                }
             }
         }
-
     }
 
 
