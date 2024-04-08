@@ -1,7 +1,12 @@
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
+import java.net.*;
+
 public class ElevGUI implements ActionListener{
+    static DatagramSocket socket;
+    private JButton changeButton;//this just triggers change
+    private int[] elevFloor = new int[4];
     private JTextField currentFloorInput;
     private JTextField desiredFloorInput;
     private JButton confirmButton;
@@ -11,6 +16,8 @@ public class ElevGUI implements ActionListener{
     private JTextArea elevFour;
 
     public ElevGUI(){
+
+
         JFrame frame = new JFrame("Elevator Project");
         Container contentPane = frame.getContentPane();
         contentPane.setLayout(new FlowLayout());
@@ -73,12 +80,35 @@ public class ElevGUI implements ActionListener{
 
 
     }
+    private void setupSocket() throws UnknownHostException {
+        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+        int len = 32;
+        DatagramPacket floorPacket = new DatagramPacket(new byte[len], len, serverAddress, 12);
+        DatagramPacket elevPacket = new DatagramPacket(new byte[len], len, serverAddress, 11);
+
+
+        try {
+            socket = new DatagramSocket(8000);
+        } catch (SocketException e) {
+            System.out.println(e);
+            throw new RuntimeException(e);
+        }
+    }
+    public void updateFloors(int[] floors){
+        elevFloor = floors;
+        changeButton.getActionListeners()[0].actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+    }
     public void actionPerformed(ActionEvent e) {
+
         if (e.getSource() == confirmButton) {
             String currentFloor = currentFloorInput.getText();
             String desiredFloor = desiredFloorInput.getText();
             // TODO Process the input, update elevator status, and display it in JTextAreas
 
+
+
         }
     }
+
+
 }

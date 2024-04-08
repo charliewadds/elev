@@ -1,15 +1,19 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.util.*;
 public class Scheduler implements Runnable{
-
+    static final int MAX_ELEVATORS = 100;
+    private static int numElevators = 0;
+    private static int numFloors = 0;
     static final double MOVE_MAX_TIME = 1;//10 secon ds
     static List<Map<String, Object>> elevators = new ArrayList<Map<String, Object>>();
     static List<Map<String, Object>> floors = new ArrayList<Map<String, Object>>();
 
+    static String[] ElevatorIp = new String[MAX_ELEVATORS];
+    static int[] ElevatorPort = new int[MAX_ELEVATORS];
+
+    static String[] FloorIp = new String[MAX_ELEVATORS];
+    static int[] FloorPort = new int[MAX_ELEVATORS];
     static int floor;
     static DatagramSocket socket;
 
@@ -50,116 +54,8 @@ public class Scheduler implements Runnable{
 
 
 
-        System.out.println("SETUP: \n\n");
-
-        System.out.println("Enter the number of elevators: ");
-        int numElevators = scanner.nextInt();
-        String ElevatorIp[] = new String[numElevators];
-        int ElevatorPort[] = new int[numElevators];
-
-        System.out.println("Enter the number of floors: \n\n");
-        int numFloors = scanner.nextInt();
-        String FloorIp[] = new String[numFloors];
-        int FloorPort[] = new int[numFloors];
 
 
-        for(int i = 0; i < numElevators; i++){
-            System.out.println("is the elevator remote or local? (r/l)");
-            String remote = scanner.next();
-            if(remote.equals("r")) {
-                System.out.println("Enter the IP address of elevator " + i + ": ");
-                ElevatorIp[i] = scanner.next();
-//                System.out.println("Enter the port number of elevator " + i + ": ");
-//                ElevatorPort[i] = scanner.next();
-
-            }else{
-                //System.out.println("Enter the port number of elevator " + i + ": (this has to be the same as the one the elevator will ask for)");
-                //ElevatorPort[i] = scanner.next();
-                ElevatorIp[i] = "127.0.0.1";
-
-                Elevator newElevator = new Elevator();
-                Thread elevatorThread = new Thread(newElevator);
-                elevatorThread.start();
-
-            }
-
-            System.out.println("Waiting for response from elevator " + (i + 1) + "...");
-            socket.receive(setupPacket);
-            System.out.println("Response received from elevator " + (i + 1) + "...");
-            ElevatorPort[i] = (int) setupPacket.getData()[0];
-
-            if(remote.equals("l")){
-                setupPacket.setData(new byte[]{(byte) (i+1)});
-                setupPacket.setAddress(InetAddress.getByName(ElevatorIp[i]));
-                setupPacket.setPort(ElevatorPort[i]);
-                socket.send(setupPacket);
-
-            }
-            if(setupPacket.getAddress().getHostAddress().equals(ElevatorIp[i])){
-                System.out.println("Elevator " + (i+1) + " is ready, the port is: " + ElevatorPort[i]);
-            }else{
-                System.out.println("Elevator " + (i +1)+ " is not ready");
-            }
-
-        }
-
-        /////////////////////////////////
-        for(int i = 0; i < numFloors; i++){
-            System.out.println("is the floor remote or local? (r/l)");
-            String remote = scanner.next();
-            if(remote.equals("r")) {
-                System.out.println("Enter the IP address of floor " + i + ": ");
-                FloorIp[i] = scanner.next();
-//                System.out.println("Enter the port number of elevator " + i + ": ");
-//                ElevatorPort[i] = scanner.next();
-
-            }else{
-                //System.out.println("Enter the port number of elevator " + i + ": (this has to be the same as the one the elevator will ask for)");
-                //ElevatorPort[i] = scanner.next();
-                FloorIp[i] = "127.0.0.1";
-
-                Floor newFloor = new Floor();
-                Thread floorThread = new Thread(newFloor);
-                floorThread.start();
-
-            }
-
-            System.out.println("Waiting for response from floor " + i + "...");
-            socket.receive(setupPacket);
-            System.out.println("Response received from floor " + i + "...");
-            FloorPort[i] = (int) setupPacket.getData()[0];
-
-            if(remote.equals("l")){
-                setupPacket.setData(new byte[]{(byte) (i+1)});
-                setupPacket.setAddress(InetAddress.getByName(FloorIp[i]));
-                setupPacket.setPort(FloorPort[i]);
-                socket.send(setupPacket);
-
-            }
-            if(setupPacket.getAddress().getHostAddress().equals(FloorIp[i])){
-                System.out.println("Floor " + (i+1) + " is ready, the port is: " + FloorPort[i]);
-            }else{
-                System.out.println("Floor " + (i +1)+ " is not ready");
-            }
-
-        }
-
-        for(int i = 0; i < numElevators; i++){
-            Map<String, Object> elevator = new HashMap<String, Object>();
-            elevator.put("elevNum", i);
-            elevator.put("doorState", "CLOSED");
-            elevator.put("direction", "NONE");
-            elevator.put("floor", 1);
-            elevators.add(elevator);
-        }
-
-        for(int i = 0; i < numFloors; i++){
-            Map<String, Object> floor = new HashMap<String, Object>();
-            floor.put("floorNum", i);
-            floor.put("buttonState", "NONE");
-            floor.put("elevatorState", "NOT_ARRIVED");
-            floors.add(floor);
-        }
 
 
 
@@ -176,10 +72,41 @@ public class Scheduler implements Runnable{
             System.out.println("(scheduler) Received data");
 
             byte[] data = floorPacket.getData();
-            //System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
+            System.out.println("Data: " + data[0] + " " + data[1]);
             byte[] command = new byte[5];
             switch (data[0]){
 
+                case 0b00111111://guiInfo
+                    System.out.println("(scheduler) GUI info");
+                    command[0] = (byte) numElevators;
+                    System.out.println("(scheduler) numElevators: " + numElevators);
+                    command[1] = (byte) numFloors;
+                    System.out.println("(scheduler) numFloors: " + numFloors);
+                    setupPacket.setData(command);//todo might need to change size
+                    setupPacket.setAddress(InetAddress.getByName("127.0.0.1"));
+                    setupPacket.setPort(8000);
+
+                    socket.send(setupPacket);
+
+
+                    break;
+
+
+                case 0b01111111://addElev
+                    System.out.println("(scheduler) addElev");
+
+                    //byte[] setupData = setupPacket.getData();
+                    System.out.println("(scheduler) Elevator port: " + data[1]);
+                    addElevator("127.0.0.1", data[1]);//todo this only works for localhost right now
+                    break;
+
+                case 0b01111110://addFloor
+                    System.out.println("(scheduler) addFloor");
+
+                    //byte[] setupData = setupPacket.getData();
+                    System.out.println("(scheduler) Floor port: " + data[1]);
+                    addFloor("127.0.0.1", data[1]);//todo this only works for localhost right now
+                    break;
 
                 case 0b00000000://floor button pressed, elevator should reach floor in 10 seconds max
                     System.out.println("(scheduler) Floor button pressed");
@@ -300,4 +227,187 @@ public class Scheduler implements Runnable{
     }
 
 
+    public static void addElevator(String ip, int port) throws IOException, InterruptedException {
+        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+        DatagramPacket setupPacket = new DatagramPacket(new byte[32], 32,serverAddress, 22);
+        Map<String, Object> elevator = new HashMap<String, Object>();
+        elevator.put("elevNum", elevators.size());
+        elevator.put("doorState", "CLOSED");
+        elevator.put("direction", "NONE");
+        elevator.put("floor", 1);
+        elevators.add(elevator);
+
+        //start a new thread for the elevator if the ip is local
+        //the port will default to 80001
+        if(ip.equals("127.0.0.1")){
+            Elevator newElevator = new Elevator();
+            Thread elevatorThread = new Thread(newElevator);
+            elevatorThread.start();
+        }
+        Thread.sleep(100);
+        setupPacket.setPort(8001);
+        setupPacket.setData(new byte[]{(byte) port});
+        socket.send(setupPacket);
+        setupPacket.setPort(port);
+        Thread.sleep(100);
+        setupPacket.setData(new byte[]{(byte) elevators.size()});
+        socket.send(setupPacket);
+        numElevators++;
+        ElevatorIp[elevators.size()-1] = ip;
+        ElevatorPort[elevators.size()-1] = port;
+
+    }
+
+    public static void addFloor(String ip, int port) throws IOException, InterruptedException {
+        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+        DatagramPacket setupPacket = new DatagramPacket(new byte[32], 32,serverAddress, 22);
+        Map<String, Object> floor = new HashMap<String, Object>();
+        floor.put("floorNum", floors.size());
+        floor.put("doorState", "CLOSED");
+        floor.put("direction", "NONE");
+        floor.put("floor", 1);
+        floors.add(floor);
+
+        //start a new thread for the floor if the ip is local
+        //the port will default to 80001
+        if(ip.equals("127.0.0.1")){
+            Floor newFloor = new Floor();
+            Thread elevatorThread = new Thread(newFloor);
+            elevatorThread.start();
+        }
+        Thread.sleep(100);
+        setupPacket.setPort(8001);
+        setupPacket.setData(new byte[]{(byte) port});
+        socket.send(setupPacket);
+        setupPacket.setPort(port);
+        Thread.sleep(100);
+        setupPacket.setData(new byte[]{(byte) floors.size()});
+        socket.send(setupPacket);
+        numFloors++;
+        FloorIp[floors.size()-1] = ip;
+        FloorPort[floors.size()-1] = port;
+
+    }
+
+
 }
+
+
+/*
+System.out.println("SETUP: \n\n");
+
+        System.out.println("Enter the number of elevators: ");
+        int numElevators = scanner.nextInt();
+        String ElevatorIp[] = new String[numElevators];
+        int ElevatorPort[] = new int[numElevators];
+
+        System.out.println("Enter the number of floors: \n\n");
+        int numFloors = scanner.nextInt();
+        String FloorIp[] = new String[numFloors];
+        int FloorPort[] = new int[numFloors];
+
+
+        for(int i = 0; i < numElevators; i++){
+            System.out.println("is the elevator remote or local? (r/l)");
+            String remote = scanner.next();
+            if(remote.equals("r")) {
+                System.out.println("Enter the IP address of elevator " + i + ": ");
+                ElevatorIp[i] = scanner.next();
+//                System.out.println("Enter the port number of elevator " + i + ": ");
+//                ElevatorPort[i] = scanner.next();
+
+            }else{
+                //System.out.println("Enter the port number of elevator " + i + ": (this has to be the same as the one the elevator will ask for)");
+                //ElevatorPort[i] = scanner.next();
+                ElevatorIp[i] = "127.0.0.1";
+
+                Elevator newElevator = new Elevator();
+                Thread elevatorThread = new Thread(newElevator);
+                elevatorThread.start();
+
+            }
+
+            System.out.println("Waiting for response from elevator " + (i + 1) + "...");
+            socket.receive(setupPacket);
+            System.out.println("Response received from elevator " + (i + 1) + "...");
+            ElevatorPort[i] = (int) setupPacket.getData()[0];
+
+            if(remote.equals("l")){
+                setupPacket.setData(new byte[]{(byte) (i+1)});
+                setupPacket.setAddress(InetAddress.getByName(ElevatorIp[i]));
+                setupPacket.setPort(ElevatorPort[i]);
+                socket.send(setupPacket);
+
+            }
+            if(setupPacket.getAddress().getHostAddress().equals(ElevatorIp[i])){
+                System.out.println("Elevator " + (i+1) + " is ready, the port is: " + ElevatorPort[i]);
+            }else{
+                System.out.println("Elevator " + (i +1)+ " is not ready");
+            }
+
+        }
+
+        /////////////////////////////////
+        for(int i = 0; i < numFloors; i++){
+            System.out.println("is the floor remote or local? (r/l)");
+            String remote = scanner.next();
+            if(remote.equals("r")) {
+                System.out.println("Enter the IP address of floor " + i + ": ");
+                FloorIp[i] = scanner.next();
+//                System.out.println("Enter the port number of elevator " + i + ": ");
+//                ElevatorPort[i] = scanner.next();
+
+            }else{
+                //System.out.println("Enter the port number of elevator " + i + ": (this has to be the same as the one the elevator will ask for)");
+                //ElevatorPort[i] = scanner.next();
+                FloorIp[i] = "127.0.0.1";
+
+                Floor newFloor = new Floor();
+                Thread floorThread = new Thread(newFloor);
+                floorThread.start();
+
+            }
+
+            System.out.println("Waiting for response from floor " + i + "...");
+            socket.receive(setupPacket);
+            System.out.println("Response received from floor " + i + "...");
+            FloorPort[i] = (int) setupPacket.getData()[0];
+
+            if(remote.equals("l")){
+                setupPacket.setData(new byte[]{(byte) (i+1)});
+                setupPacket.setAddress(InetAddress.getByName(FloorIp[i]));
+                setupPacket.setPort(FloorPort[i]);
+                socket.send(setupPacket);
+
+            }
+            if(setupPacket.getAddress().getHostAddress().equals(FloorIp[i])){
+                System.out.println("Floor " + (i+1) + " is ready, the port is: " + FloorPort[i]);
+            }else{
+                System.out.println("Floor " + (i +1)+ " is not ready");
+            }
+
+        }
+
+        for(int i = 0; i < numElevators; i++){
+            Map<String, Object> elevator = new HashMap<String, Object>();
+            elevator.put("elevNum", i);
+            elevator.put("doorState", "CLOSED");
+            elevator.put("direction", "NONE");
+            elevator.put("floor", 1);
+            elevators.add(elevator);
+        }
+
+        for(int i = 0; i < numFloors; i++){
+            Map<String, Object> floor = new HashMap<String, Object>();
+            floor.put("floorNum", i);
+            floor.put("buttonState", "NONE");
+            floor.put("elevatorState", "NOT_ARRIVED");
+            floors.add(floor);
+        }
+
+
+
+
+
+
+ */

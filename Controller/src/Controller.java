@@ -1,10 +1,14 @@
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Controller {
     static DatagramSocket socket;
+
+    int[] ports;
+    int[] ip;
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("text or gui (1/0): ");
@@ -12,7 +16,34 @@ public class Controller {
         scanner.nextLine();
 
         if(type == 0) {
-            ElevGUI elevatorGUI = new ElevGUI();
+            //ElevGUI elevatorGUI = new ElevGUI();
+            //GUI testForm = new GUI();
+
+
+            InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
+            int len = 32;
+            DatagramPacket SchedPacket = new DatagramPacket(new byte[len], len, serverAddress, 21);
+            DatagramPacket RecvPacket = new DatagramPacket(new byte[len], len, serverAddress, 21);
+            try {
+                socket = new DatagramSocket(8000);
+            } catch (SocketException e) {
+                System.out.println(e);
+                throw new RuntimeException(e);
+            }
+
+            SchedPacket.setData(new byte[]{0b0111111});
+            SchedPacket.setPort(21);
+            socket.send(SchedPacket);
+            socket.receive(RecvPacket);
+            System.out.println(Arrays.toString(RecvPacket.getData()));
+            int numElev = RecvPacket.getData()[0];
+            int numFloors = RecvPacket.getData()[1];
+            //int numElev = 4;
+            //int numFloors = 22;
+
+
+            NewGui newGui = new NewGui(numElev, numFloors);
+            while(true);
             //gui
             //TODO
         }else {
@@ -101,7 +132,7 @@ public class Controller {
             e.printStackTrace(); // Handle or log the exception appropriately
         }
     }
-    private static void sendElevatorButton(int elevator, int floor, DatagramPacket packet, int port){
+    public static void sendElevatorButton(int elevator, int floor, DatagramPacket packet, int port){
         //send a message to the elevator
         byte[] command = new byte[4];
         command[0] = 0b00000010;

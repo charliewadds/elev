@@ -28,40 +28,14 @@ public class Elevator implements Runnable{
         }
     }
     public static void main(String[] args) throws IOException, InterruptedException {
-        System.out.println("Elevator is running");
+        System.out.println("Elevator is running (default to port 8001 until updated)");
         doorState = doorState.CLOSED;
         direction = direction.NONE;
         floor = 1;
-        int recvPort;
 
-//        System.out.println("Creating new Elevator");
-//        System.out.println("Enter the elevator number: ");
-//        Scanner scanner = new Scanner(System.in);
-//        elevNum = scanner.nextInt();
-        Thread.sleep(1000);
-        System.out.println("(unknown Elevator) enter port number");
-        Scanner scanner = new Scanner(System.in);
-        recvPort = scanner.nextInt();
-        scanner.nextLine();
-        System.out.println("Elevator port: " + recvPort);
-
-
-        System.out.println("enter the ip of the scheduler (if local press enter)");
-        String ip = scanner.nextLine();
-        if(ip.isEmpty()) {
-            ip = "127.0.0.1";
-        }
-
-        InetAddress serverAddress = InetAddress.getByName(ip);
-
-
-
-
-        System.out.println("enter the port of the scheduler (default 21)");
-        int destPort = scanner.nextInt();
-        scanner.nextLine();
-
-
+        int recvPort = 8001;
+        int destPort = 21;
+        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
         int len = 32;
         DatagramPacket packet = new DatagramPacket(new byte[len], len,serverAddress, destPort);
         DatagramPacket setupPacket = new DatagramPacket(new byte[len], len,serverAddress, destPort);
@@ -77,15 +51,35 @@ public class Elevator implements Runnable{
             }
             System.out.println("Try a different port number");
         }
-        //
-        setupPacket.setData(new byte[]{(byte) recvPort});
-        setupPacket.setAddress(serverAddress);
-        setupPacket.setPort(destPort);
-        socket.send(setupPacket);
 
+
+
+        //get new port
+        System.out.println("Elevator is waiting for new port");
         socket.receive(setupPacket);
-        System.out.println("Received: " +(int) packet.getData()[0]);
+        recvPort = setupPacket.getData()[0];
+        socket.close();
+        try {
+            socket = new DatagramSocket(recvPort);//reset port
+
+        } catch (SocketException e) {
+            System.out.println("port number: " + recvPort + " is already in use");
+            System.out.println(e);
+        }
+        System.out.println("Elevator got new port: " + recvPort);
+
+
+
+
+
+        //get elevator number
+        System.out.println("Elevator is waiting for number");
+        socket.receive(setupPacket);
         elevNum = setupPacket.getData()[0];
+        System.out.println("Elevator got number: " + elevNum);
+
+
+
 
         while(true){
 

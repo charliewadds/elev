@@ -34,35 +34,18 @@ public class Floor implements Runnable{
     public static void main(String[] args) throws IOException, InterruptedException {
         elevatorState = elevatorState.NOT_ARRIVED;
         buttonState = buttonState.NONE;
-        int recvPort;
 
-
-        Thread.sleep(1000);
-        System.out.println("(unknown Floor) enter port number");
-        Scanner scanner = new Scanner(System.in);
-        recvPort = scanner.nextInt();
-        scanner.nextLine();
-        System.out.println("Floor port: " + recvPort);
-
-
-        System.out.println("enter the ip of the scheduler (if local press enter)");
-        String ip = scanner.nextLine();
-        if(ip.isEmpty()) {
-            ip = "127.0.0.1";
-        }
-        InetAddress serverAddress = InetAddress.getByName(ip);
-
-        System.out.println("enter the port of the scheduler (default 21)");
-        int destPort = scanner.nextInt();
-        scanner.nextLine();
+        System.out.println("Floor is running (default to port 8001 until updated)");
 
 
 
+        int recvPort = 8001;
+        int destPort = 21;
+        InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
         int len = 32;
-
-        DatagramPacket packet = new DatagramPacket(new byte[len], len, serverAddress, destPort);
-        DatagramPacket setupPacket = new DatagramPacket(new byte[len], len, serverAddress, destPort);
-
+        DatagramPacket packet = new DatagramPacket(new byte[len], len,serverAddress, destPort);
+        DatagramPacket setupPacket = new DatagramPacket(new byte[len], len,serverAddress, destPort);
+        byte[] command = new byte[3];
         while(true) {
             try {
                 socket = new DatagramSocket(recvPort);
@@ -75,16 +58,35 @@ public class Floor implements Runnable{
             System.out.println("Try a different port number");
         }
 
-        setupPacket.setData(new byte[]{(byte) recvPort});
-        setupPacket.setAddress(serverAddress);
-        setupPacket.setPort(destPort);
-        socket.send(setupPacket);
 
+
+        //get new port
+        System.out.println("Floor is waiting for new port");
         socket.receive(setupPacket);
-        System.out.println("Received: " + (int) setupPacket.getData()[0]);
-        floorNum = setupPacket.getData()[0];
-        byte[] data;
+        recvPort = setupPacket.getData()[0];
+        socket.close();
+        try {
+            socket = new DatagramSocket(recvPort);//reset port
 
+        } catch (SocketException e) {
+            System.out.println("port number: " + recvPort + " is already in use");
+            System.out.println(e);
+        }
+
+        System.out.println("Floor got new port: " + recvPort);
+
+
+
+
+
+        //get elevator number
+        System.out.println("Floor is waiting for number");
+        socket.receive(setupPacket);
+        floorNum = setupPacket.getData()[0];
+        System.out.println("Floor got number: " + floorNum);
+
+
+        byte[] data = new byte[5];
         while(true) {
 
             System.out.println("(floor " + floorNum + ") Waiting for data");
@@ -127,7 +129,7 @@ public class Floor implements Runnable{
                     }
 
                     //send button state to scheduler
-                    byte[] command = new byte[3];
+                    command = new byte[3];
                     command[0] = 0b00000000;
                     command[1] = data[1];
                     command[2] = (byte) floorNum;
