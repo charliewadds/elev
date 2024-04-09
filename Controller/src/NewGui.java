@@ -14,12 +14,19 @@ public class NewGui extends JFrame {
     private JLabel[] elevatorStatusLights;
     private JButton[] elevatorSendButtons;
 
+    private JLabel[] elevLabels;
+
     int numElev;
     int numFloor;
     int newPort;
 
-    int elevatorPorts[];
-    String elevatorIPs[];
+    List<Integer> elevatorPorts;
+    List<String> elevatorIPs;
+
+    List<Integer> floorPorts;
+    List<String> floorIPs;
+
+
 
     static DatagramSocket socket;
     public NewGui(int numElev, int numFloors) throws UnknownHostException {
@@ -41,8 +48,12 @@ public class NewGui extends JFrame {
         this.elevatorInputs = new JTextField[MAX_ELEV];
         this.elevatorStatusLights = new JLabel[MAX_ELEV];
         this.elevatorSendButtons = new JButton[MAX_ELEV];
-        this.elevatorPorts = new int[MAX_ELEV];
-        this.elevatorIPs = new String[MAX_ELEV];
+
+        this.elevatorPorts = new ArrayList<>();
+        this.elevatorIPs = new ArrayList<>();
+        this.floorPorts = new ArrayList<>();
+        this.floorIPs = new ArrayList<>();
+        this.elevLabels = new JLabel[MAX_ELEV];
 
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -69,6 +80,8 @@ public class NewGui extends JFrame {
                 }
                 try {
                     addFloor(Integer.parseInt(newPortFieldFloorStart.getText()) + i);
+                    floorPorts.add(Integer.parseInt(newPortFieldFloorStart.getText()) + i);
+                    floorIPs.add("127.0.0.1");
                 } catch (UnknownHostException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -79,6 +92,8 @@ public class NewGui extends JFrame {
             addElev.addActionListener(e -> {
                 try {
                     addElev(Integer.parseInt(newPortField.getText()));
+                    elevatorPorts.add(Integer.parseInt(newPortField.getText()));
+                    elevatorIPs.add("127.0.0.1");
                 } catch (UnknownHostException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -98,32 +113,7 @@ public class NewGui extends JFrame {
         //add(blankPanel1);
 
         for (int i = 0; i < numElev; i++) {
-            JPanel floorPanel = new JPanel(new FlowLayout());
-            JLabel floorLabel = new JLabel("elevator #" + (i + 1) + ": " + "floorStatus.get(i)");
-            floorPanel.add(floorLabel);
-            add(floorPanel);
-
-            JPanel inputPanel = new JPanel(new FlowLayout());
-            elevatorInputs[i] = new JTextField(5);
-            inputPanel.add(elevatorInputs[i]);
-            elevatorSendButtons[i] = new JButton("Send to elevator #" + (i + 1));
-            int finalI = i;
-            elevatorSendButtons[i].addActionListener(e -> {
-                System.out.println("Sending " + (elevatorInputs[finalI].getText()));
-            });
-            inputPanel.add(elevatorSendButtons[i]);
-            add(inputPanel);
-
-
-            JPanel statusPanel = new JPanel(new FlowLayout());
-            elevatorStatusLights[i] = new JLabel();
-            elevatorStatusLights[i].setOpaque(true);
-            elevatorStatusLights[i].setPreferredSize(new Dimension(20, 20));
-            elevatorStatusLights[i].setBackground(Color.GREEN); // Green circle initially
-            elevatorStatusLights[i].setBorder(BorderFactory.createLineBorder(Color.BLACK)); // Border for visibility
-            statusPanel.add(elevatorStatusLights[i]);
-            //elevatorStatusLights.add(statusLabel);
-            add(statusPanel);
+            addElevGUI(i);
         }
 
         pack();
@@ -145,11 +135,29 @@ public class NewGui extends JFrame {
             throw new RuntimeException(e);
         }
         numElev++;
-        addElevGUI(numElev);
+
+        addElevGUI(numElev-1);
     }
 
-    private void sendElevatorFloor(int elevator, int floor) {
-        InetAddress serverAddress = InetAddress.getByName("
+    private void sendElevatorFloor(int elevator, int floor) throws UnknownHostException {
+        InetAddress serverAddress = InetAddress.getByName(elevatorIPs.get(elevator));
+        DatagramPacket setupPacket = new DatagramPacket(new byte[32], 32, serverAddress, 21);
+        //send a message to the elevator
+        byte[] command = new byte[4];
+        command[0] = 0b00000010;
+        command[1] = (byte) floor;
+        command[2] = 0b00000000;
+        command[3] = 0b00000000;
+        setupPacket.setPort(elevatorPorts.get(elevator));
+        setupPacket.setData(command);
+        try {
+            socket.send(setupPacket);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
 
     private void addFloor(int port) throws UnknownHostException {
         InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
@@ -170,18 +178,22 @@ public class NewGui extends JFrame {
 
 
         JPanel floorPanel = new JPanel(new FlowLayout());
-        JLabel floorLabel = new JLabel("elevator #" + (i + 1) + ": " + "floorStatus.get(i)");
-        floorPanel.add(floorLabel);
+        elevLabels[i] = new JLabel("elevator #" + (i) + ": " + "floorStatus.get(i)");
+        floorPanel.add(elevLabels[i]);
         add(floorPanel);
 
         JPanel inputPanel = new JPanel(new FlowLayout());
         elevatorInputs[i] = new JTextField(5);
         inputPanel.add(elevatorInputs[i]);
-        elevatorSendButtons[i] = new JButton("Send to elevator #" + (i + 1));
-        int finalI = i;
-        elevatorSendButtons[i].addActionListener(e -> {
-            System.out.println("Sending " + (elevatorInputs[finalI].getText()));
+        elevatorSendButtons[i] = new JButton("Send to elevator #" + (i));
+        elevatorSendButtons[i].addActionListener(e-> {
+            try {
+                sendElevatorFloor(i, Integer.parseInt(elevatorInputs[i].getText()));
+            } catch (UnknownHostException ex) {
+                throw new RuntimeException(ex);
+            }
         });
+        int finalI = i;
         inputPanel.add(elevatorSendButtons[i]);
         add(inputPanel);
 
@@ -200,14 +212,7 @@ public class NewGui extends JFrame {
         pack();
 
     }
-    public void updateElevs(List<Integer> floorStatus) {
-        for (int i = 0; i < 4; i++) {
-            JLabel floorLabel = new JLabel("elevator #" + (i + 1) + ": " + floorStatus.get(i));
-            JPanel floorPanel = (JPanel) getContentPane().getComponent(i * 3);
-            floorPanel.removeAll();
-            floorPanel.add(floorLabel);
-            floorPanel.revalidate();
-            floorPanel.repaint();
-        }
+    public void updateElevs(int elevNum, int floorNum) {
+        elevLabels[elevNum - 1].setText("elevator #" + (elevNum) + ": " + floorNum);
     }
 }

@@ -94,10 +94,12 @@ public class ElevGUI implements ActionListener{
             throw new RuntimeException(e);
         }
     }
-    public void updateFloors(int[] floors){
-        elevFloor = floors;
-        changeButton.getActionListeners()[0].actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
-    }
+//    public void updateFloors(int[] floors){
+//        elevFloor = floors;
+//        for(int i = 0; i< floors.length; i++){
+//            elevators[i].setText("Elevator " + i + " is on floor " + floors[i]);
+//        }
+//    }
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource() == confirmButton) {

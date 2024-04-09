@@ -43,7 +43,16 @@ public class Controller {
 
 
             NewGui newGui = new NewGui(numElev, numFloors);
-            while(true);
+            while(true){
+                System.out.println("(Controller) Elevator arrived");
+                socket.receive(RecvPacket);
+                byte[] data = RecvPacket.getData();
+                if(data[0] == 0b00000001){//elevator arrived
+
+                    newGui.updateElevs(data[1], data[2]);
+                }
+
+            }
             //gui
             //TODO
         }else {

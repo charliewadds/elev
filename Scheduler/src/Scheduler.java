@@ -67,21 +67,20 @@ public class Scheduler implements Runnable{
             for(int i = 0; i < numElevators; i++){
                 moveTimers[i] = -1;
             }
-            System.out.println("(scheduler) Waiting for data");
+            //System.out.println("(scheduler) Waiting for data");
             socket.receive(floorPacket);
-            System.out.println("(scheduler) Received data");
-
+            //System.out.println("(scheduler) Received data");
             byte[] data = floorPacket.getData();
-            System.out.println("Data: " + data[0] + " " + data[1]);
+            //System.out.println("Data: " + data[0] + " " + data[1] + "\n\n");
             byte[] command = new byte[5];
             switch (data[0]){
 
                 case 0b00111111://guiInfo
-                    System.out.println("(scheduler) GUI info");
+                    System.out.println("(scheduler) GUI info\n\n");
                     command[0] = (byte) numElevators;
-                    System.out.println("(scheduler) numElevators: " + numElevators);
+                    //System.out.println("(scheduler) numElevators: " + numElevators);
                     command[1] = (byte) numFloors;
-                    System.out.println("(scheduler) numFloors: " + numFloors);
+                    //System.out.println("(scheduler) numFloors: " + numFloors);
                     setupPacket.setData(command);//todo might need to change size
                     setupPacket.setAddress(InetAddress.getByName("127.0.0.1"));
                     setupPacket.setPort(8000);
@@ -96,7 +95,7 @@ public class Scheduler implements Runnable{
                     System.out.println("(scheduler) addElev");
 
                     //byte[] setupData = setupPacket.getData();
-                    System.out.println("(scheduler) Elevator port: " + data[1]);
+                    System.out.println("(scheduler) Elevator port: " + data[1] + "\n\n");
                     addElevator("127.0.0.1", data[1]);//todo this only works for localhost right now
                     break;
 
@@ -104,18 +103,18 @@ public class Scheduler implements Runnable{
                     System.out.println("(scheduler) addFloor");
 
                     //byte[] setupData = setupPacket.getData();
-                    System.out.println("(scheduler) Floor port: " + data[1]);
+                    System.out.println("(scheduler) Floor port: " + data[1] + "\n\n");
                     addFloor("127.0.0.1", data[1]);//todo this only works for localhost right now
                     break;
 
-                case 0b00000000://floor button pressed, elevator should reach floor in 10 seconds max
-                    System.out.println("(scheduler) Floor button pressed");
+                case 0b00000000://floor button pressed, elevator should reach floor in 10 seconds max todo I think this is wrong, not sure why, bad vibes
+                    System.out.println("(scheduler) Floor button pressed\n\n");
                     int upOrDown = data[1];
                     int floor = data[2];
                     int elevNum = findClosestElev(floor);
 
                     if((int) elevators.get(elevNum-1).get("floor") != floor){//if the elevator is not already on the floor
-                        System.out.println("(scheduler) Elevator is not on the floor");
+                        System.out.println("(scheduler) Elevator is not on the floor\n\n");
                         Thread.sleep(1000);
                         command[0] = 0b00000000;//send move to floor
                         command[1] = (byte) floor;
@@ -140,8 +139,9 @@ public class Scheduler implements Runnable{
                     break;
 
                 case 0b00000001://elevator reached floor
-                    System.out.println("(scheduler) Elevator reached floor");
+                    System.out.println("(scheduler) Elevator reached floor\n\n");
                     int newFloor = data[1];
+                    int currElevNum;
                     elevators.get(data[2]-1).put("floor", newFloor);//update the floor of the elevator
                     elevators.get(data[2]-1).put("doorState", "OPEN");//open the door
                     //Thread.sleep(1000);//wait for the door
@@ -151,37 +151,48 @@ public class Scheduler implements Runnable{
                     command[2] = (byte) data[2];
                     elevPacket.setData(command);
                     elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]-1]));
-                    elevPacket.setPort(ElevatorPort[data[2]]);
-                    System.out.println("(scheduler) sendOpenDoor");//todo implement door wait max time
+                    elevPacket.setPort(ElevatorPort[data[2]-1]);
+                    //System.out.println("(scheduler) sendOpenDoor");//todo implement door wait max time
                     double doorTimer = System.currentTimeMillis();
                     socket.send(elevPacket);
                     socket.receive(elevPacket);
                     byte[] doorData = elevPacket.getData();
                     if(doorData[0] == 0b00000001 && doorData[1] == data[2] && (doorTimer < System.currentTimeMillis() - 5000)){
-                        System.out.println("(scheduler) Door is open");
-                        moveTimers[data[2]] = -1;//reset the move timer
+                        System.out.println("(scheduler) Door is open\n\n");
+                        moveTimers[data[2]-1] = -1;//reset the move timer
 
                     }else{
-                        System.out.println("(scheduler) DOOR ERROR");
+                        System.out.println("(scheduler) DOOR ERROR\n\n");
                     }
 
 
                     elevPacket.setAddress(InetAddress.getByName(ElevatorIp[data[2]-1]));
-                    elevPacket.setPort(ElevatorPort[data[2]]);
-                    System.out.println("(scheduler) sendCloseDoor");
+                    elevPacket.setPort(ElevatorPort[data[2]-1]);
+                    currElevNum = data[2];
+                    System.out.println("(scheduler) sendCloseDoor\n\n");
                     elevators.get(data[2]-1).put("doorState", "CLOSED");//open the door
+                    command[0] = 0b00000000;//send close door
+                    command[1] = 0b00000001;
                     elevPacket.setData(command);
                     socket.send(elevPacket);
 
 
                     command[0] = 0b00000000;//send arrived at floor to floor
-                    command[1] = (byte) newFloor;
-                    command[2] = (byte) data[2];
+                    //command[1] = (byte) newFloor;
+                    //command[2] = (byte) data[2];
+                    command[1] = 0b00000001;
 
                     floorPacket.setAddress(InetAddress.getByName(FloorIp[newFloor]));
                     floorPacket.setPort(FloorPort[newFloor]);
                     floorPacket.setData(command);
                     socket.send(floorPacket);
+
+
+                    setupPacket.setPort(8000);//todo magic number
+                    setupPacket.setData(new byte[]{0b00000001, (byte) data[2], (byte) newFloor});
+                    socket.send(setupPacket);//todo this only works if it is local
+
+
                     break;
 
                 case 0b00000010://elevator button pressed
@@ -191,11 +202,20 @@ public class Scheduler implements Runnable{
                     command[0] = 0b00000000;//go to floor
                     command[1] = (byte) floorNum;
                     command[2] = 0b00000000;
+                    //System.out.println("(scheduler) ElevatorIP");
+                    System.out.println(ElevatorIp[elev-1]);
                     elevPacket.setAddress(InetAddress.getByName(ElevatorIp[elev-1]));
-                    elevPacket.setPort(ElevatorPort[elev]);
+                    //System.out.println("(scheduler) ElevatorPort");
+                    System.out.println(ElevatorPort[elev-1]);
+                    elevPacket.setPort(ElevatorPort[elev-1]);
                     elevPacket.setData(command);
                     socket.send(elevPacket);
 
+                    break;
+
+                case 0b00000011://door Opened
+
+                    System.out.println("(scheduler) Door opened");
                     break;
 
             }

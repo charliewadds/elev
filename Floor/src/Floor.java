@@ -88,9 +88,9 @@ public class Floor implements Runnable{
         byte[] data = new byte[5];
         while(true) {
 
-            System.out.println("(floor " + floorNum + ") Waiting for data\n\n\n\n");
+            //System.out.println("(floor " + floorNum + ") Waiting for data\n\n\n\n");
             socket.receive(packet);
-            System.out.println("(floor  " + floorNum + ") Received data");
+            //System.out.println("(floor  " + floorNum + ") Received data");
 
             data = packet.getData().clone();
             System.out.println("Data: " + data[0]);
@@ -98,32 +98,32 @@ public class Floor implements Runnable{
             switch (data[0]){
 
                 case 0b00000000://elevator arrived at floor
-                    System.out.println("Elevator arrived at floor");
+                    System.out.println("(floor " + floorNum + ") Elevator arrived at floor " + floorNum );
                     elevatorState = elevatorState.NOT_ARRIVED;
                     if (data[1] == 0b00000000) {
                         if(!Elevator.isDoorClosed()){
-                            System.out.println("System failed. Elevator door is not closed");
+                            System.out.println("(floor " + floorNum + ") System failed. Elevator door is not closed");
                         }
                         elevatorState = elevatorState.NOT_ARRIVED;
                     } else if (data[1] == 0b00000001) {
-                        System.out.println("Elevator arrived at floor " + floorNum);
+                        System.out.println("(floor " + floorNum + ") Elevator arrived at floor " + floorNum);
                         elevatorState = elevatorState.ARRIVED;
                     } else {
-                        System.out.println("Invalid elevator state");
+                        System.out.println("(floor " + floorNum + ") Invalid elevator state");
                         elevatorState = elevatorState.NOT_ARRIVED;
                     }
-
+                    System.out.println("\n\n\n\n");
                     break;
 
                 case 0b00000001://floor button pressed
-                    System.out.println("up/down button pressed");
+                    System.out.println("(floor " + floorNum + ") up/down button pressed");
                     if(data[1] == 0b00000000) {
                         buttonState = buttonState.UP;
 
                     }else if(data[1] == 0b00000001) {
                         buttonState = buttonState.DOWN;
                     }else{
-                        System.out.println("Invalid button state");
+                        System.out.println("(floor " + floorNum + ") Invalid button state");
                         buttonState = buttonState.NONE;
                     }
 
@@ -138,7 +138,7 @@ public class Floor implements Runnable{
                     try {
                         packet.setPort(destPort);
                         socket.send(packet);
-                        System.out.println("Sent data");
+                        //System.out.println("Sent data");
 
                     } catch (IOException e) {
                         throw new RuntimeException(e);

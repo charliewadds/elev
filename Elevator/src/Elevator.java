@@ -40,6 +40,7 @@ public class Elevator implements Runnable{
         DatagramPacket packet = new DatagramPacket(new byte[len], len,serverAddress, destPort);
         DatagramPacket setupPacket = new DatagramPacket(new byte[len], len,serverAddress, destPort);
         byte[] command = new byte[3];
+
         while(true) {
             try {
                 socket = new DatagramSocket(recvPort);
@@ -83,19 +84,20 @@ public class Elevator implements Runnable{
 
         while(true){
 
-            System.out.println("(Elevator " + elevNum + ")  waiting for a command.");
+            //System.out.println("(Elevator " + elevNum + ")  waiting for a command.");
+
             socket.receive(packet);
             byte[] data = packet.getData();
 
-            System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2] );
+            //System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2] );
             switch (data[0]){
                 case 0b00000000://go to floor
                     //System.out.println("go to floor");
                     int newFloor = data[1];
                     //System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                    System.out.println("go to floor");
+                    System.out.println("(Elevator " + elevNum + ") go to floor");
                     if(isDoorClosed()){
-                        System.out.println("Door closed");
+                        System.out.println("(Elevator " + elevNum + ") Door closed");
                         moveElevator(newFloor);
                         doorState = doorState.OPEN;//todo make this in scheduler
                         command = new byte[3];
@@ -109,26 +111,26 @@ public class Elevator implements Runnable{
                         socket.send(packet);
                         floor = newFloor;
                     }
-                    System.out.println("Door Fault");
+
                     break;
 
                 case 0b00000001://open door
-                    System.out.println("open door");
+                    System.out.println("(Elevator " + elevNum + ") open door");
                     if(data[1] == 0b00000000) {//open door
-                        System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                        System.out.println("opening door");
+                        //System.out.println("(Elevator " + elevNum + ") Received: " + new String(data, 0, packet.getLength()));
+                        System.out.println("(Elevator " + elevNum + ")opening door");
                         Thread.sleep(5000);
-                        System.out.println("door opened");
-                        packet.setData(new byte[]{0b00000001, (byte) elevNum});
+                        System.out.println("(Elevator " + elevNum + ") door opened");
+                        packet.setData(new byte[]{0b00000010, (byte) elevNum});
                         socket.send(packet);
                         doorState = doorState.OPEN;
                     }else {//close door
-                        System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                        System.out.println("closing door");
+                        //System.out.println("Received: " + new String(data, 0, packet.getLength()));
+                        System.out.println("(Elevator " + elevNum + ") closing door");
                         Thread.sleep(5000);
                         packet.setData(new byte[]{0b00000000, (byte) elevNum});
                         socket.send(packet);
-                        System.out.println("door closed");
+                        System.out.println("(Elevator " + elevNum + ") door closed\n\n\n");
                         doorState = doorState.CLOSED;
                     }
 
@@ -138,7 +140,7 @@ public class Elevator implements Runnable{
                 case 0b00000010://elevator button pressed
 
                     //System.out.println("Received: " + new String(data, 0, packet.getLength()));
-                    System.out.println("elevator button pressed");
+                    System.out.println("(Elevator " + elevNum + ") elevator button pressed\n\n\n");
                     command = new byte[3];
                     command[0] = 0b00000010;
                     command[1] = data[1];
