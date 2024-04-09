@@ -9,12 +9,12 @@ public class NewGui extends JFrame {
     final int MAX_ELEV = 4;
     final int MAX_FLOOR = 100;
 
-    private JTextField[] elevatorInputs;
-    private int[] elevStatus;
-    private JLabel[] elevatorStatusLights;
-    private JButton[] elevatorSendButtons;
+    private final JTextField[] elevatorInputs;
+    private final int[] elevStatus;
+    private final JLabel[] elevatorStatusLights;
+    private final JButton[] elevatorSendButtons;
 
-    private JLabel[] elevLabels;
+    private final JLabel[] elevLabels;
 
     int numElev;
     int numFloor;
@@ -99,7 +99,6 @@ public class NewGui extends JFrame {
                 }
             });
         } finally{
-            ;
         }
         addPanel.add(addElev);
         addPanel.add(newPortField);
@@ -145,7 +144,7 @@ public class NewGui extends JFrame {
         //send a message to the elevator
         byte[] command = new byte[4];
         command[0] = 0b00000010;
-        command[1] = (byte) floor;
+        command[1] = (byte) (floor-1);
         command[2] = 0b00000000;
         command[3] = 0b00000000;
         setupPacket.setPort(elevatorPorts.get(elevator));
@@ -178,7 +177,7 @@ public class NewGui extends JFrame {
 
 
         JPanel floorPanel = new JPanel(new FlowLayout());
-        elevLabels[i] = new JLabel("elevator #" + (i) + ": " + "floorStatus.get(i)");
+        elevLabels[i] = new JLabel("elevator #" + (i+1) + ": " + "1");
         floorPanel.add(elevLabels[i]);
         add(floorPanel);
 
@@ -213,6 +212,6 @@ public class NewGui extends JFrame {
 
     }
     public void updateElevs(int elevNum, int floorNum) {
-        elevLabels[elevNum - 1].setText("elevator #" + (elevNum) + ": " + floorNum);
+        elevLabels[elevNum - 1].setText("elevator #" + (elevNum) + ": " + (floorNum +1));
     }
 }

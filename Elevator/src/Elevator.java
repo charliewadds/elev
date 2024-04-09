@@ -14,7 +14,7 @@ public class Elevator implements Runnable{
     static doorState doorState;
     static direction direction;
     static int floor;
-    static int elevNum;
+
     static DatagramSocket socket;
 
     static int port = 20;
@@ -32,7 +32,7 @@ public class Elevator implements Runnable{
         doorState = doorState.CLOSED;
         direction = direction.NONE;
         floor = 1;
-
+        int elevNum;
         int recvPort = 8001;
         int destPort = 21;
         InetAddress serverAddress = InetAddress.getByName("127.0.0.1");
@@ -115,20 +115,20 @@ public class Elevator implements Runnable{
                     break;
 
                 case 0b00000001://open door
-                    System.out.println("(Elevator " + elevNum + ") open door");
+                    System.out.println("(Elevator " + elevNum + ") open/close door");
                     if(data[1] == 0b00000000) {//open door
                         //System.out.println("(Elevator " + elevNum + ") Received: " + new String(data, 0, packet.getLength()));
                         System.out.println("(Elevator " + elevNum + ")opening door");
                         Thread.sleep(5000);
                         System.out.println("(Elevator " + elevNum + ") door opened");
-                        packet.setData(new byte[]{0b00000010, (byte) elevNum});
+                        packet.setData(new byte[]{0b00000001, (byte) elevNum});
                         socket.send(packet);
                         doorState = doorState.OPEN;
                     }else {//close door
                         //System.out.println("Received: " + new String(data, 0, packet.getLength()));
                         System.out.println("(Elevator " + elevNum + ") closing door");
                         Thread.sleep(5000);
-                        packet.setData(new byte[]{0b00000000, (byte) elevNum});
+                        packet.setData(new byte[]{0b00000100, (byte) elevNum});
                         socket.send(packet);
                         System.out.println("(Elevator " + elevNum + ") door closed\n\n\n");
                         doorState = doorState.CLOSED;

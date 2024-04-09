@@ -18,7 +18,7 @@ public class Floor implements Runnable{
 
     static buttonState buttonState;
     static elevatorState elevatorState;
-    static int floorNum;
+
 
 
     static DatagramSocket socket;
@@ -32,6 +32,7 @@ public class Floor implements Runnable{
 
     }
     public static void main(String[] args) throws IOException, InterruptedException {
+        int floorNum;
         elevatorState = elevatorState.NOT_ARRIVED;
         buttonState = buttonState.NONE;
 
@@ -98,7 +99,7 @@ public class Floor implements Runnable{
             switch (data[0]){
 
                 case 0b00000000://elevator arrived at floor
-                    System.out.println("(floor " + floorNum + ") Elevator arrived at floor " + floorNum );
+                    //System.out.println("(floor " + floorNum + ") Elevator arrived at floor " + floorNum );
                     elevatorState = elevatorState.NOT_ARRIVED;
                     if (data[1] == 0b00000000) {
                         if(!Elevator.isDoorClosed()){

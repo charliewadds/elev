@@ -6,14 +6,14 @@ import java.net.*;
 public class ElevGUI implements ActionListener{
     static DatagramSocket socket;
     private JButton changeButton;//this just triggers change
-    private int[] elevFloor = new int[4];
-    private JTextField currentFloorInput;
-    private JTextField desiredFloorInput;
-    private JButton confirmButton;
-    private JTextArea elevOne;
-    private JTextArea elevTwo;
-    private JTextArea elevThree;
-    private JTextArea elevFour;
+    private final int[] elevFloor = new int[4];
+    private final JTextField currentFloorInput;
+    private final JTextField desiredFloorInput;
+    private final JButton confirmButton;
+    private final JTextArea elevOne;
+    private final JTextArea elevTwo;
+    private final JTextArea elevThree;
+    private final JTextArea elevFour;
 
     public ElevGUI(){
 
