@@ -145,7 +145,7 @@ public class NewGui extends JFrame {
         byte[] command = new byte[4];
         command[0] = 0b00000010;
         command[1] = (byte) (floor-1);
-        command[2] = 0b00000000;
+        command[2] = (byte) elevator;
         command[3] = 0b00000000;
         setupPacket.setPort(elevatorPorts.get(elevator));
         setupPacket.setData(command);
@@ -213,5 +213,13 @@ public class NewGui extends JFrame {
     }
     public void updateElevs(int elevNum, int floorNum) {
         elevLabels[elevNum - 1].setText("elevator #" + (elevNum) + ": " + (floorNum +1));
+    }
+
+    public void setError(int elevNum) {
+        elevatorStatusLights[elevNum -1].setBackground(Color.RED);
+    }
+
+    public void resetError(int elevNum) {
+        elevatorStatusLights[elevNum -1].setBackground(Color.GREEN);
     }
 }

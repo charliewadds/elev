@@ -47,10 +47,19 @@ public class Controller {
                 System.out.println("(Controller) Elevator arrived");
                 socket.receive(RecvPacket);
                 byte[] data = RecvPacket.getData();
-                if(data[0] == 0b00000001){//elevator arrived
-
-                    newGui.updateElevs(data[1], data[2]);
+                switch(data[0]){
+                    case 0b00000001:
+                        newGui.updateElevs(data[1], data[2]);
+                        break;
+                    case 0b00000010:
+                        System.out.println("Setting error");
+                        newGui.setError(data[1]);
+                        break;
+                    case 0b00000011:
+                        newGui.updateElevs(data[1], data[2]);
+                        break;
                 }
+
 
             }
             //gui

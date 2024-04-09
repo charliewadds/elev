@@ -84,17 +84,17 @@ public class Elevator implements Runnable{
 
         while(true){
 
-            //System.out.println("(Elevator " + elevNum + ")  waiting for a command.");
-
+            System.out.println("(Elevator " + elevNum + ")  waiting for a command.");
             socket.receive(packet);
+            System.out.println("(Elevator " + elevNum + ")  got a command.");
             byte[] data = packet.getData();
 
             //System.out.println("Data: " + data[0] + " " + data[1] + " " + data[2] );
             switch (data[0]){
-                case 0b00000000://go to floor
-                    //System.out.println("go to floor");
+                case 0b0000000://go to floor
+                    System.out.println("go to floor");
                     int newFloor = data[1];
-                    //System.out.println("Received: " + new String(data, 0, packet.getLength()));
+                    System.out.println("Received: " + new String(data, 0, packet.getLength()));
                     System.out.println("(Elevator " + elevNum + ") go to floor");
                     if(isDoorClosed()){
                         System.out.println("(Elevator " + elevNum + ") Door closed");
@@ -149,6 +149,7 @@ public class Elevator implements Runnable{
                     packet.setPort(destPort);
                     packet.setData(command);
                     socket.send(packet);
+                    System.out.println("sendEnd");
                     break;
 
 
