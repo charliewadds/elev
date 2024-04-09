@@ -3,35 +3,24 @@
 
 
 
-## UDP Protocol
-the protocols 
+## Elevator Controller 
 
-### Elevator Commands
+### Running the code
+- Run the main file in Scheduler module.
+- Run the main file in the Controller module.
 
-#### <u>Go to floor</u>
-- 0b00000000(0x00) Command code
-- 0bxxxxxxxx(0xXX) floor number
-#### <u>Open and close door</u>
-- 0b00000001 Command code
-- 0b00000000(0x00) Open or 0b00000001(0x01) Close
-#### <u>Request floor / press elevator button</u>
-- 0b00000010 Command code
-- 0bxxxxxxxx(0xXX) floor number
+## Modules and what they do
 
+### Scheduler
+This module is responsible for starting and setting up all the threads for the elevators and floors.
+It also gets inputs from the threads and connects the elevators and floors.
+Finally it sends data to the GUI.
 
-## Scheduler Commands
+### Controller
+This starts the GUI and sends packets to the Scheduler based on user inputs.
 
-#### <u>up/down button pressed</u>
-- 0b00000000(0x00) Command code
-- 0b00000000(0x00) Up or 0b00000001(0x01) Down
-- 0bxxxxxxxx(0xXX) floor number
+### Elevator
+This module is responsible for the elevator logic. It receives inputs from the Scheduler and sends data back to the Scheduler.
 
-#### <u>Elevator reached floor</u>
-- 0b00000001 Command code
-- 0bxxxxxxxx(0xXX) floor number
-
-#### <u>Elevator floor request button pressed</u>
-- 0b00000010 Command code
-- 0bxxxxxxxx(0xXX) floor number
-- 0bxxxxxxxx(0xXX) elevator number
-
+### Floor
+This module is responsible for the floor logic. It receives inputs from the Scheduler and sends data back to the Scheduler.
